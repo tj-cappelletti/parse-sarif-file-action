@@ -80,7 +80,13 @@ async function run(): Promise<void> {
       (failOnWarnings && warningsDetected) ||
       (failOnNotes && notesDetected)
     ) {
-      core.setFailed('The JMESPath query found results')
+      const message =
+        'Results were found that met the fail workflow criteria:\n' +
+        `Errors: ${errorsDetected}\n` +
+        `Warnings: ${warningsDetected}\n` +
+        `Notes: ${notesDetected}\n`
+
+      core.setFailed(message)
     }
 
     if (jmesPathQuery === undefined || jmesPathQuery.length === 0) return
