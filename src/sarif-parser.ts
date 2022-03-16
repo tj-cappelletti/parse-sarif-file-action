@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as fs from 'fs'
-import {Log, ReportingDescriptor, ToolComponent} from 'sarif'
+import {Log, ReportingDescriptor, ToolComponent} from 'sarif' // eslint-disable-line import/no-unresolved
 
 export class SarifParser {
   readonly sarifLog: Log
@@ -16,6 +16,7 @@ export class SarifParser {
   }
 
   async queryLogFile(jmesPathQuery: string): Promise<boolean> {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
     const jmespath = require('jmespath')
 
     core.debug(`Running query ${jmesPathQuery} ...`)
