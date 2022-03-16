@@ -37,8 +37,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const sarif_parser_1 = __nccwpck_require__(461);
-function failWorkFlow() {
-}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -55,30 +53,34 @@ function run() {
             core.debug(`sarifFilePath: ${sarifFilePath}`);
             // Ensure parmeters can be parsed
             if (failOnAnyString === undefined)
-                throw new Error("The value for `failOnAny` must be defined");
+                throw new Error('The value for `failOnAny` must be defined');
             if (failOnErrorsString === undefined)
-                throw new Error("The value for `failOnErrors` must be defined");
+                throw new Error('The value for `failOnErrors` must be defined');
             if (failOnWarningsString === undefined)
-                throw new Error("The value for `failOnWarnings` must be defined");
+                throw new Error('The value for `failOnWarnings` must be defined');
             if (failOnNotesString === undefined)
-                throw new Error("The value for `failOnNotes` must be defined");
+                throw new Error('The value for `failOnNotes` must be defined');
             // Ensure parmeters have the right value
-            if (failOnAnyString.toLocaleLowerCase() !== "false" && failOnAnyString.toLocaleLowerCase() !== "true")
+            if (failOnAnyString.toLocaleLowerCase() !== 'false' &&
+                failOnAnyString.toLocaleLowerCase() !== 'true')
                 throw new Error(`Unable to parse the value '${failOnAnyString}' as a boolean for 'failOnAny'`);
-            if (failOnErrorsString.toLocaleLowerCase() !== "false" && failOnErrorsString.toLocaleLowerCase() !== "true")
+            if (failOnErrorsString.toLocaleLowerCase() !== 'false' &&
+                failOnErrorsString.toLocaleLowerCase() !== 'true')
                 throw new Error(`Unable to parse the value '${failOnErrorsString}' as a boolean for 'failOnErrorsString'`);
-            if (failOnWarningsString.toLocaleLowerCase() !== "false" && failOnWarningsString.toLocaleLowerCase() !== "true")
+            if (failOnWarningsString.toLocaleLowerCase() !== 'false' &&
+                failOnWarningsString.toLocaleLowerCase() !== 'true')
                 throw new Error(`Unable to parse the value '${failOnWarningsString}' as a boolean for 'failOnWarningsString'`);
-            if (failOnNotesString.toLocaleLowerCase() !== "false" && failOnNotesString.toLocaleLowerCase() !== "true")
+            if (failOnNotesString.toLocaleLowerCase() !== 'false' &&
+                failOnNotesString.toLocaleLowerCase() !== 'true')
                 throw new Error(`Unable to parse the value '${failOnNotesString}' as a boolean for 'failOnNotesString'`);
-            let failOnAny = failOnAnyString.toLocaleLowerCase() === "true";
-            let failOnErrors = failOnErrorsString.toLocaleLowerCase() === "true";
-            let failOnWarnings = failOnWarningsString.toLocaleLowerCase() === "true";
-            let failOnNotes = failOnNotesString.toLocaleLowerCase() === "true";
-            let sarifParser = new sarif_parser_1.SarifParser(sarifFilePath);
-            let errorsDetected = yield sarifParser.hasErrorAlerts();
-            let warningsDetected = yield sarifParser.hasWarningAlerts();
-            let notesDetected = yield sarifParser.hasNoteAlerts();
+            const failOnAny = failOnAnyString.toLocaleLowerCase() === 'true';
+            const failOnErrors = failOnErrorsString.toLocaleLowerCase() === 'true';
+            const failOnWarnings = failOnWarningsString.toLocaleLowerCase() === 'true';
+            const failOnNotes = failOnNotesString.toLocaleLowerCase() === 'true';
+            const sarifParser = new sarif_parser_1.SarifParser(sarifFilePath);
+            const errorsDetected = yield sarifParser.hasErrorAlerts();
+            const warningsDetected = yield sarifParser.hasWarningAlerts();
+            const notesDetected = yield sarifParser.hasNoteAlerts();
             core.debug(`errorsDetected: ${errorsDetected}`);
             core.debug(`warningsDetected: ${warningsDetected}`);
             core.debug(`notesDetected: ${notesDetected}`);
@@ -86,21 +88,18 @@ function run() {
                 (failOnErrors && errorsDetected) ||
                 (failOnWarnings && warningsDetected) ||
                 (failOnNotes && notesDetected)) {
-                failWorkFlow();
+                core.setFailed('The JMESPath query found results');
             }
             if (jmesPathQuery === undefined || jmesPathQuery.length === 0)
                 return;
-            let queryHasResults = yield sarifParser.queryLogFile(jmesPathQuery);
+            const queryHasResults = yield sarifParser.queryLogFile(jmesPathQuery);
             core.debug(`queryHasResults: ${queryHasResults}`);
-            if (queryHasResults)
-                failWorkFlow();
-            // core.debug(new Date().toTimeString())
-            // await wait(parseInt(ms, 10))
-            // core.debug(new Date().toTimeString())
-            // core.setOutput('time', new Date().toTimeString())
+            if (queryHasResults) {
+                core.setFailed('The JMESPath query found results');
+            }
         }
         catch (error) {
-            let message = "An unknown error occured.";
+            let message = 'An unknown error occured.';
             if (error instanceof Error)
                 message = error.message;
             core.setFailed(message);
@@ -153,16 +152,17 @@ class SarifParser {
     constructor(sarifFilePath) {
         core.debug(`SARIF File Path: ${sarifFilePath}`);
         if (!fs.existsSync(sarifFilePath)) {
-            throw new Error("SARIF file does not exist");
+            throw new Error('SARIF file does not exist');
         }
-        let buffer = fs.readFileSync(sarifFilePath, 'utf-8');
+        const buffer = fs.readFileSync(sarifFilePath, 'utf-8');
         this.sarifLog = JSON.parse(buffer);
     }
     queryLogFile(jmesPathQuery) {
         return __awaiter(this, void 0, void 0, function* () {
-            var jmespath = __nccwpck_require__(783);
+            // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+            const jmespath = __nccwpck_require__(783);
             core.debug(`Running query ${jmesPathQuery} ...`);
-            var result = jmespath.search(this.sarifLog, jmesPathQuery);
+            const result = jmespath.search(this.sarifLog, jmesPathQuery);
             if (result === null || result === undefined) {
                 core.debug(`Result of query is ${result} ...`);
                 return false;
@@ -173,7 +173,7 @@ class SarifParser {
     hasResults() {
         return __awaiter(this, void 0, void 0, function* () {
             let hasResults = false;
-            for (let run of this.sarifLog.runs) {
+            for (const run of this.sarifLog.runs) {
                 if (run.results !== undefined && run.results.length > 0) {
                     hasResults = true;
                     break;
@@ -201,7 +201,7 @@ class SarifParser {
         return __awaiter(this, void 0, void 0, function* () {
             let hasAlert = false;
             core.debug(`Alert level: ${level} ...`);
-            for (let run of this.sarifLog.runs) {
+            for (const run of this.sarifLog.runs) {
                 if (run.results === null || run.results === undefined) {
                     core.debug(`Results are ${run.results}`);
                     continue;
@@ -210,7 +210,7 @@ class SarifParser {
                     core.debug(`Tool Extensions are ${run.tool.extensions}`);
                     continue;
                 }
-                for (let result of run.results) {
+                for (const result of run.results) {
                     if (result.rule === null || result.rule === undefined) {
                         core.debug(`Result Rule is ${result.rule}`);
                         continue;
@@ -219,16 +219,18 @@ class SarifParser {
                         core.debug(`Result Rule Index is ${result.rule.index}`);
                         continue;
                     }
-                    if (result.rule.toolComponent === null || result.rule.toolComponent === undefined) {
+                    if (result.rule.toolComponent === null ||
+                        result.rule.toolComponent === undefined) {
                         core.debug(`Result Rule Tool Component is ${result.rule.toolComponent}`);
                         continue;
                     }
-                    if (result.rule.toolComponent.index === null || result.rule.toolComponent.index === undefined) {
+                    if (result.rule.toolComponent.index === null ||
+                        result.rule.toolComponent.index === undefined) {
                         core.debug(`Result Rule Tool Component Index is ${result.rule.toolComponent.index}`);
                         continue;
                     }
                     core.debug(`Result Rule Tool Component Index: ${result.rule.toolComponent.index}`);
-                    let toolComponent = run.tool.extensions[result.rule.toolComponent.index];
+                    const toolComponent = run.tool.extensions[result.rule.toolComponent.index];
                     if (toolComponent === null || toolComponent === undefined) {
                         core.debug(`Tool Component is ${toolComponent}`);
                         continue;
@@ -238,8 +240,9 @@ class SarifParser {
                         continue;
                     }
                     core.debug(`Result Rule Index: ${result.rule.index}`);
-                    let reportingDescriptor = toolComponent.rules[result.rule.index];
-                    if (reportingDescriptor.defaultConfiguration === null || reportingDescriptor.defaultConfiguration === undefined) {
+                    const reportingDescriptor = toolComponent.rules[result.rule.index];
+                    if (reportingDescriptor.defaultConfiguration === null ||
+                        reportingDescriptor.defaultConfiguration === undefined) {
                         core.debug(`Reporting Descriptor Default Configuration are ${reportingDescriptor.defaultConfiguration}`);
                         continue;
                     }
