@@ -27,4 +27,4 @@ jobs:
           failOnWarnings: false
           failOnNotes: false
           jmesPathQuery: 'should return null'
-          sarifFile: ./__tests__/sarif-files/sarif-with-out-results.json
+          sarifFile: ./__tests__/sarif-files/sarif-without-results.json
