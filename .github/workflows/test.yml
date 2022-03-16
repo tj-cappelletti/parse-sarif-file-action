@@ -22,4 +22,9 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./
         with:
-          sarifFile: ./__tests__/sarif-files/sarif-with-error-results.json
+          failOnAny: false
+          failOnErrors: false
+          failOnWarnings: false
+          failOnNotes: false
+          jmesPathQuery: 'should return null'
+          sarifFile: ./__tests__/sarif-files/sarif-with-out-results.json
