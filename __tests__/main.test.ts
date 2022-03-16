@@ -19,10 +19,15 @@ test('test runs', () => {
   const nodePath = process.execPath
   const mainJsFile = path.join(__dirname, '..', 'lib', 'main.js')
   const options: childProcess.ExecFileSyncOptions = {
+    stdio: 'inherit',
     env: process.env
   }
-
-  console.log(
-    childProcess.execFileSync(nodePath, [mainJsFile], options).toString()
-  )
+  
+  try {
+    console.log(
+      childProcess.execFileSync(nodePath, [mainJsFile], options).toString()
+    )
+  } catch(error) {
+    console.log(error)
+  }
 })
