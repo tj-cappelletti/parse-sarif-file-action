@@ -26,5 +26,5 @@ jobs:
           failOnErrors: false
           failOnWarnings: false
           failOnNotes: false
-          jmesPathQuery: 'should return null'
+          jmesPathQuery: 'should.return.null'
           sarifFile: ./__tests__/sarif-files/sarif-without-results.json
