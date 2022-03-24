@@ -1,78 +1,57 @@
-import * as core from '@actions/core'
-import {SarifParser} from './sarif-parser'
+import * as core from '@actions/core';
+import {SarifParser} from './sarif-parser';
 
 async function run(): Promise<void> {
   try {
-    const failOnAnyString: string = core.getInput('failOnAny')
-    const failOnErrorsString: string = core.getInput('failOnErrors')
-    const failOnWarningsString: string = core.getInput('failOnWarnings')
-    const failOnNotesString: string = core.getInput('failOnNotes')
-    const jmesPathQuery: string = core.getInput('jmesPathQuery')
-    const sarifFilePath: string = core.getInput('sarifFile')
+    const failOnAnyString: string = core.getInput('failOnAny');
+    const failOnErrorsString: string = core.getInput('failOnErrors');
+    const failOnWarningsString: string = core.getInput('failOnWarnings');
+    const failOnNotesString: string = core.getInput('failOnNotes');
+    const jmesPathQuery: string = core.getInput('jmesPathQuery');
+    const maxSecurityScoreOutputVariable: string = core.getInput('maxSecurityScoreOutputVariable');
+    const sarifFilePath: string = core.getInput('sarifFile');
+    const statusOutputVariable: string = core.getInput('statusOutputVariable');
 
-    core.debug(`failOnAny: ${failOnAnyString}`)
-    core.debug(`failOnErrors: ${failOnErrorsString}`)
-    core.debug(`failOnWarnings: ${failOnWarningsString}`)
-    core.debug(`jmesPathQuery: ${jmesPathQuery}`)
-    core.debug(`sarifFilePath: ${sarifFilePath}`)
+    const messages: string[] = [];
+
+    let successful = true;
+
+    core.debug(`failOnAny: ${failOnAnyString}`);
+    core.debug(`failOnErrors: ${failOnErrorsString}`);
+    core.debug(`failOnWarnings: ${failOnWarningsString}`);
+    core.debug(`jmesPathQuery: ${jmesPathQuery}`);
+    core.debug(`sarifFilePath: ${sarifFilePath}`);
 
     // Ensure parmeters can be parsed
-    if (failOnAnyString === undefined)
-      throw new Error('The value for `failOnAny` must be defined')
-    if (failOnErrorsString === undefined)
-      throw new Error('The value for `failOnErrors` must be defined')
-    if (failOnWarningsString === undefined)
-      throw new Error('The value for `failOnWarnings` must be defined')
-    if (failOnNotesString === undefined)
-      throw new Error('The value for `failOnNotes` must be defined')
+    if (failOnAnyString === undefined) throw new Error('The value for `failOnAny` must be defined');
+    if (failOnErrorsString === undefined) throw new Error('The value for `failOnErrors` must be defined');
+    if (failOnWarningsString === undefined) throw new Error('The value for `failOnWarnings` must be defined');
+    if (failOnNotesString === undefined) throw new Error('The value for `failOnNotes` must be defined');
 
     // Ensure parmeters have the right value
-    if (
-      failOnAnyString.toLocaleLowerCase() !== 'false' &&
-      failOnAnyString.toLocaleLowerCase() !== 'true'
-    )
-      throw new Error(
-        `Unable to parse the value '${failOnAnyString}' as a boolean for 'failOnAny'`
-      )
-    if (
-      failOnErrorsString.toLocaleLowerCase() !== 'false' &&
-      failOnErrorsString.toLocaleLowerCase() !== 'true'
-    )
-      throw new Error(
-        `Unable to parse the value '${failOnErrorsString}' as a boolean for 'failOnErrorsString'`
-      )
-    if (
-      failOnWarningsString.toLocaleLowerCase() !== 'false' &&
-      failOnWarningsString.toLocaleLowerCase() !== 'true'
-    )
-      throw new Error(
-        `Unable to parse the value '${failOnWarningsString}' as a boolean for 'failOnWarningsString'`
-      )
-    if (
-      failOnNotesString.toLocaleLowerCase() !== 'false' &&
-      failOnNotesString.toLocaleLowerCase() !== 'true'
-    )
-      throw new Error(
-        `Unable to parse the value '${failOnNotesString}' as a boolean for 'failOnNotesString'`
-      )
+    if (failOnAnyString.toLocaleLowerCase() !== 'false' && failOnAnyString.toLocaleLowerCase() !== 'true')
+      throw new Error(`Unable to parse the value '${failOnAnyString}' as a boolean for 'failOnAny'`);
+    if (failOnErrorsString.toLocaleLowerCase() !== 'false' && failOnErrorsString.toLocaleLowerCase() !== 'true')
+      throw new Error(`Unable to parse the value '${failOnErrorsString}' as a boolean for 'failOnErrorsString'`);
+    if (failOnWarningsString.toLocaleLowerCase() !== 'false' && failOnWarningsString.toLocaleLowerCase() !== 'true')
+      throw new Error(`Unable to parse the value '${failOnWarningsString}' as a boolean for 'failOnWarningsString'`);
+    if (failOnNotesString.toLocaleLowerCase() !== 'false' && failOnNotesString.toLocaleLowerCase() !== 'true')
+      throw new Error(`Unable to parse the value '${failOnNotesString}' as a boolean for 'failOnNotesString'`);
 
-    const failOnAny: boolean = failOnAnyString.toLocaleLowerCase() === 'true'
-    const failOnErrors: boolean =
-      failOnErrorsString.toLocaleLowerCase() === 'true'
-    const failOnWarnings: boolean =
-      failOnWarningsString.toLocaleLowerCase() === 'true'
-    const failOnNotes: boolean =
-      failOnNotesString.toLocaleLowerCase() === 'true'
+    const failOnAny: boolean = failOnAnyString.toLocaleLowerCase() === 'true';
+    const failOnErrors: boolean = failOnErrorsString.toLocaleLowerCase() === 'true';
+    const failOnWarnings: boolean = failOnWarningsString.toLocaleLowerCase() === 'true';
+    const failOnNotes: boolean = failOnNotesString.toLocaleLowerCase() === 'true';
 
-    const sarifParser: SarifParser = new SarifParser(sarifFilePath)
+    const sarifParser: SarifParser = new SarifParser(sarifFilePath);
 
-    const errorsDetected: boolean = await sarifParser.hasErrorAlerts()
-    const warningsDetected: boolean = await sarifParser.hasWarningAlerts()
-    const notesDetected: boolean = await sarifParser.hasNoteAlerts()
+    const errorsDetected: boolean = sarifParser.hasErrorAlerts();
+    const warningsDetected: boolean = sarifParser.hasWarningAlerts();
+    const notesDetected: boolean = sarifParser.hasNoteAlerts();
 
-    core.debug(`errorsDetected: ${errorsDetected}`)
-    core.debug(`warningsDetected: ${warningsDetected}`)
-    core.debug(`notesDetected: ${notesDetected}`)
+    core.debug(`errorsDetected: ${errorsDetected}`);
+    core.debug(`warningsDetected: ${warningsDetected}`);
+    core.debug(`notesDetected: ${notesDetected}`);
 
     if (
       (failOnAny && (errorsDetected || warningsDetected || notesDetected)) ||
@@ -80,33 +59,44 @@ async function run(): Promise<void> {
       (failOnWarnings && warningsDetected) ||
       (failOnNotes && notesDetected)
     ) {
-      const message =
-        'Results were found that met the fail workflow criteria:\n' +
-        `Errors: ${errorsDetected}\n` +
-        `Warnings: ${warningsDetected}\n` +
-        `Notes: ${notesDetected}\n`
+      messages.push('Results were found that met the fail workflow criteria:');
+      messages.push(`\tErrors: ${errorsDetected}`);
+      messages.push(`\tWarnings: ${warningsDetected}`);
+      messages.push(`\tNotes: ${notesDetected}`);
 
-      core.setFailed(message)
+      successful = false;
     }
 
-    if (jmesPathQuery === undefined || jmesPathQuery.length === 0) return
+    if (jmesPathQuery === undefined || jmesPathQuery.length === 0) return;
 
-    const queryHasResults: boolean = await sarifParser.queryLogFile(
-      jmesPathQuery
-    )
+    const queryHasResults: boolean = sarifParser.queryLogFile(jmesPathQuery);
 
-    core.debug(`queryHasResults: ${queryHasResults}`)
+    core.debug(`queryHasResults: ${queryHasResults}`);
 
     if (queryHasResults) {
-      core.setFailed('The JMESPath query found results')
+      messages.push('The JMESPath query found results');
+
+      successful = false;
+    }
+
+    if (statusOutputVariable !== undefined) {
+      core.setOutput(statusOutputVariable, successful);
+    }
+
+    if (maxSecurityScoreOutputVariable !== undefined) {
+      core.setOutput(maxSecurityScoreOutputVariable, sarifParser.getMaxSecuritySeverityScore());
+    }
+
+    if (!successful) {
+      core.setFailed(messages.join('\n'));
     }
   } catch (error) {
-    let message = 'An unknown error occured.'
+    let message = 'An unknown error occured.';
 
-    if (error instanceof Error) message = error.message
+    if (error instanceof Error) message = error.message;
 
-    core.setFailed(message)
+    core.setFailed(message);
   }
 }
 
-run()
+run();

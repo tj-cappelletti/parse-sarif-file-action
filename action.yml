@@ -1,4 +1,4 @@
-name: 'Check SARIF File for Issues'
+name: 'SARIF File Parser'
 description: 'Allows a user to parse a SARIF file and fail the workflow if the specified conditions are met.'
 author: 'GitHub'
 inputs:
@@ -18,12 +18,18 @@ inputs:
     default: 'false'
     description: 'Fail workflow if notes are in the SARIF file'
     required: false
+  maxSecurityScoreOutputVariable:
+    description: 'The environment variable to report the status too'
+    required: false
   jmesPathQuery:
     description: 'The query to locate the desired information in the SARIF file, if set, will fail worflow if results are returned.'
     required: false
   sarifFile:
     description: 'The location of the SARIF file to parse'
     required: true
+  statusOutputVariable:
+    description: 'The environment variable to report the status too'
+    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'

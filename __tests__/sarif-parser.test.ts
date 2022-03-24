@@ -1,125 +1,133 @@
-import * as path from 'path'
-import {expect, test} from '@jest/globals'
-import {SarifParser} from '../src/sarif-parser'
+import * as path from 'path';
+import {expect, test} from '@jest/globals';
+import {SarifParser} from '../src/sarif-parser';
 
-test('throws file now found', async () => {
-  const sarifFilePath: string = 'something that does not exist'
+test('throws file now found', () => {
+  const sarifFilePath: string = 'something that does not exist';
 
   expect(() => {
-    new SarifParser(sarifFilePath)
-  }).toThrow('SARIF file does not exist')
-})
+    new SarifParser(sarifFilePath);
+  }).toThrow('SARIF file does not exist');
+});
 
-test('Query SARIF file with results', async () => {
-  const sarifFilePath: string = path.join(
-    __dirname,
-    'sarif-files',
-    'sarif-with-error-results.json'
-  )
-  const jmesPathQuery: string = 'runs[*].results'
+test('Get max problm severity errors', () => {
+  const sarifFilePath: string = path.join(__dirname, 'sarif-files', 'sarif-with-error-results.json');
 
-  let sarifParser: SarifParser = new SarifParser(sarifFilePath)
+  let sarifParser: SarifParser = new SarifParser(sarifFilePath);
 
-  let anyResults = await sarifParser.queryLogFile(jmesPathQuery)
+  let problemSeverity = sarifParser.getMaxProblemSeverity();
 
-  expect(anyResults).toBe(true)
-})
+  expect(problemSeverity).toBe('high');
+});
 
-test('Query SARIF file with empty results', async () => {
-  const sarifFilePath: string = path.join(
-    __dirname,
-    'sarif-files',
-    'sarif-without-results.json'
-  )
-  const jmesPathQuery: string = 'runs[*].results'
+test('Get max problem severity with warnings', () => {
+  const sarifFilePath: string = path.join(__dirname, 'sarif-files', 'sarif-with-warning-results.json');
 
-  let sarifParser: SarifParser = new SarifParser(sarifFilePath)
+  let sarifParser: SarifParser = new SarifParser(sarifFilePath);
 
-  let anyResults = await sarifParser.queryLogFile(jmesPathQuery)
+  let problemSeverity = sarifParser.getMaxProblemSeverity();
 
-  expect(anyResults).toBe(true)
-})
+  expect(problemSeverity).toBe('medium');
+});
 
-test('SARIF file with results', async () => {
-  const sarifFilePath: string = path.join(
-    __dirname,
-    'sarif-files',
-    'sarif-with-error-results.json'
-  )
+test('Get max security severity score with errors', () => {
+  const sarifFilePath: string = path.join(__dirname, 'sarif-files', 'sarif-with-error-results.json');
 
-  let sarifParser: SarifParser = new SarifParser(sarifFilePath)
+  let sarifParser: SarifParser = new SarifParser(sarifFilePath);
 
-  let anyResults = await sarifParser.hasResults()
+  let securitySevarityScore = sarifParser.getMaxSecuritySeverityScore();
 
-  expect(anyResults).toBe(true)
-})
+  expect(securitySevarityScore).toBe(7.5);
+});
 
-test('SARIF file without results', async () => {
-  const sarifFilePath: string = path.join(
-    __dirname,
-    'sarif-files',
-    'sarif-without-results.json'
-  )
+test('Get max security severity score with warnings', () => {
+  const sarifFilePath: string = path.join(__dirname, 'sarif-files', 'sarif-with-warning-results.json');
 
-  let sarifParser: SarifParser = new SarifParser(sarifFilePath)
+  let sarifParser: SarifParser = new SarifParser(sarifFilePath);
 
-  let anyResults = await sarifParser.hasResults()
+  let securitySevarityScore = sarifParser.getMaxSecuritySeverityScore();
 
-  expect(anyResults).toBe(false)
-})
+  expect(securitySevarityScore).toBe(6.1);
+});
 
-test('SARIF file with errors', async () => {
-  const sarifFilePath: string = path.join(
-    __dirname,
-    'sarif-files',
-    'sarif-with-error-results.json'
-  )
+test('Query SARIF file with results', () => {
+  const sarifFilePath: string = path.join(__dirname, 'sarif-files', 'sarif-with-error-results.json');
+  const jmesPathQuery: string = 'runs[*].results';
 
-  let sarifParser: SarifParser = new SarifParser(sarifFilePath)
+  let sarifParser: SarifParser = new SarifParser(sarifFilePath);
 
-  let anyResults = await sarifParser.hasErrorAlerts()
+  let anyResults = sarifParser.queryLogFile(jmesPathQuery);
 
-  expect(anyResults).toBe(true)
-})
+  expect(anyResults).toBe(true);
+});
 
-test('SARIF file without errors', async () => {
-  const sarifFilePath: string = path.join(
-    __dirname,
-    'sarif-files',
-    'sarif-with-warning-results.json'
-  )
+test('Query SARIF file with empty results', () => {
+  const sarifFilePath: string = path.join(__dirname, 'sarif-files', 'sarif-without-results.json');
+  const jmesPathQuery: string = 'runs[*].results';
 
-  let sarifParser: SarifParser = new SarifParser(sarifFilePath)
+  let sarifParser: SarifParser = new SarifParser(sarifFilePath);
 
-  let anyResults = await sarifParser.hasErrorAlerts()
+  let anyResults = sarifParser.queryLogFile(jmesPathQuery);
 
-  expect(anyResults).toBe(false)
-})
+  expect(anyResults).toBe(true);
+});
 
-test('SARIF file with warnings', async () => {
-  const sarifFilePath: string = path.join(
-    __dirname,
-    'sarif-files',
-    'sarif-with-warning-results.json'
-  )
+test('SARIF file with results', () => {
+  const sarifFilePath: string = path.join(__dirname, 'sarif-files', 'sarif-with-error-results.json');
 
-  let sarifParser: SarifParser = new SarifParser(sarifFilePath)
+  let sarifParser: SarifParser = new SarifParser(sarifFilePath);
 
-  let anyResults = await sarifParser.hasWarningAlerts()
+  let anyResults = sarifParser.hasResults();
 
-  expect(anyResults).toBe(true)
-})
+  expect(anyResults).toBe(true);
+});
 
-test('SARIF file without warnings', async () => {
-  const sarifFilePath: string = path.join(
-    __dirname,
-    'sarif-files',
-    'sarif-with-error-results.json'
-  )
+test('SARIF file without results', () => {
+  const sarifFilePath: string = path.join(__dirname, 'sarif-files', 'sarif-without-results.json');
 
-  let sarifParser: SarifParser = new SarifParser(sarifFilePath)
+  let sarifParser: SarifParser = new SarifParser(sarifFilePath);
 
-  let anyResults = await sarifParser.hasWarningAlerts()
+  let anyResults = sarifParser.hasResults();
 
-  expect(anyResults).toBe(false)
-})
+  expect(anyResults).toBe(false);
+});
+
+test('SARIF file with errors', () => {
+  const sarifFilePath: string = path.join(__dirname, 'sarif-files', 'sarif-with-error-results.json');
+
+  let sarifParser: SarifParser = new SarifParser(sarifFilePath);
+
+  let anyResults = sarifParser.hasErrorAlerts();
+
+  expect(anyResults).toBe(true);
+});
+
+test('SARIF file without errors', () => {
+  const sarifFilePath: string = path.join(__dirname, 'sarif-files', 'sarif-with-warning-results.json');
+
+  let sarifParser: SarifParser = new SarifParser(sarifFilePath);
+
+  let anyResults = sarifParser.hasErrorAlerts();
+
+  expect(anyResults).toBe(false);
+});
+
+test('SARIF file with warnings', () => {
+  const sarifFilePath: string = path.join(__dirname, 'sarif-files', 'sarif-with-warning-results.json');
+
+  let sarifParser: SarifParser = new SarifParser(sarifFilePath);
+
+  let anyResults = sarifParser.hasWarningAlerts();
+
+  expect(anyResults).toBe(true);
+});
+
+test('SARIF file without warnings', () => {
+  const sarifFilePath: string = path.join(__dirname, 'sarif-files', 'sarif-with-error-results.json');
+
+  let sarifParser: SarifParser = new SarifParser(sarifFilePath);
+
+  let anyResults = sarifParser.hasWarningAlerts();
+
+  expect(anyResults).toBe(false);
+});

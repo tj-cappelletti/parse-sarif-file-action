@@ -8,7 +8,11 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -45,7 +49,11 @@ function run() {
             const failOnWarningsString = core.getInput('failOnWarnings');
             const failOnNotesString = core.getInput('failOnNotes');
             const jmesPathQuery = core.getInput('jmesPathQuery');
+            const maxSecurityScoreOutputVariable = core.getInput('maxSecurityScoreOutputVariable');
             const sarifFilePath = core.getInput('sarifFile');
+            const statusOutputVariable = core.getInput('statusOutputVariable');
+            const messages = [];
+            let successful = true;
             core.debug(`failOnAny: ${failOnAnyString}`);
             core.debug(`failOnErrors: ${failOnErrorsString}`);
             core.debug(`failOnWarnings: ${failOnWarningsString}`);
@@ -61,26 +69,22 @@ function run() {
             if (failOnNotesString === undefined)
                 throw new Error('The value for `failOnNotes` must be defined');
             // Ensure parmeters have the right value
-            if (failOnAnyString.toLocaleLowerCase() !== 'false' &&
-                failOnAnyString.toLocaleLowerCase() !== 'true')
+            if (failOnAnyString.toLocaleLowerCase() !== 'false' && failOnAnyString.toLocaleLowerCase() !== 'true')
                 throw new Error(`Unable to parse the value '${failOnAnyString}' as a boolean for 'failOnAny'`);
-            if (failOnErrorsString.toLocaleLowerCase() !== 'false' &&
-                failOnErrorsString.toLocaleLowerCase() !== 'true')
+            if (failOnErrorsString.toLocaleLowerCase() !== 'false' && failOnErrorsString.toLocaleLowerCase() !== 'true')
                 throw new Error(`Unable to parse the value '${failOnErrorsString}' as a boolean for 'failOnErrorsString'`);
-            if (failOnWarningsString.toLocaleLowerCase() !== 'false' &&
-                failOnWarningsString.toLocaleLowerCase() !== 'true')
+            if (failOnWarningsString.toLocaleLowerCase() !== 'false' && failOnWarningsString.toLocaleLowerCase() !== 'true')
                 throw new Error(`Unable to parse the value '${failOnWarningsString}' as a boolean for 'failOnWarningsString'`);
-            if (failOnNotesString.toLocaleLowerCase() !== 'false' &&
-                failOnNotesString.toLocaleLowerCase() !== 'true')
+            if (failOnNotesString.toLocaleLowerCase() !== 'false' && failOnNotesString.toLocaleLowerCase() !== 'true')
                 throw new Error(`Unable to parse the value '${failOnNotesString}' as a boolean for 'failOnNotesString'`);
             const failOnAny = failOnAnyString.toLocaleLowerCase() === 'true';
             const failOnErrors = failOnErrorsString.toLocaleLowerCase() === 'true';
             const failOnWarnings = failOnWarningsString.toLocaleLowerCase() === 'true';
             const failOnNotes = failOnNotesString.toLocaleLowerCase() === 'true';
             const sarifParser = new sarif_parser_1.SarifParser(sarifFilePath);
-            const errorsDetected = yield sarifParser.hasErrorAlerts();
-            const warningsDetected = yield sarifParser.hasWarningAlerts();
-            const notesDetected = yield sarifParser.hasNoteAlerts();
+            const errorsDetected = sarifParser.hasErrorAlerts();
+            const warningsDetected = sarifParser.hasWarningAlerts();
+            const notesDetected = sarifParser.hasNoteAlerts();
             core.debug(`errorsDetected: ${errorsDetected}`);
             core.debug(`warningsDetected: ${warningsDetected}`);
             core.debug(`notesDetected: ${notesDetected}`);
@@ -88,18 +92,28 @@ function run() {
                 (failOnErrors && errorsDetected) ||
                 (failOnWarnings && warningsDetected) ||
                 (failOnNotes && notesDetected)) {
-                const message = 'Results were found that met the fail workflow criteria:\n' +
-                    `Errors: ${errorsDetected}\n` +
-                    `Warnings: ${warningsDetected}\n` +
-                    `Notes: ${notesDetected}\n`;
-                core.setFailed(message);
+                messages.push('Results were found that met the fail workflow criteria:');
+                messages.push(`\tErrors: ${errorsDetected}`);
+                messages.push(`\tWarnings: ${warningsDetected}`);
+                messages.push(`\tNotes: ${notesDetected}`);
+                successful = false;
             }
             if (jmesPathQuery === undefined || jmesPathQuery.length === 0)
                 return;
-            const queryHasResults = yield sarifParser.queryLogFile(jmesPathQuery);
+            const queryHasResults = sarifParser.queryLogFile(jmesPathQuery);
             core.debug(`queryHasResults: ${queryHasResults}`);
             if (queryHasResults) {
-                core.setFailed('The JMESPath query found results');
+                messages.push('The JMESPath query found results');
+                successful = false;
+            }
+            if (statusOutputVariable !== undefined) {
+                core.setOutput(statusOutputVariable, successful);
+            }
+            if (maxSecurityScoreOutputVariable !== undefined) {
+                core.setOutput(maxSecurityScoreOutputVariable, sarifParser.getMaxSecuritySeverityScore());
+            }
+            if (!successful) {
+                core.setFailed(messages.join('\n'));
             }
         }
         catch (error) {
@@ -122,7 +136,11 @@ run();
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -139,15 +157,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SarifParser = void 0;
 const core = __importStar(__nccwpck_require__(186));
@@ -161,106 +170,101 @@ class SarifParser {
         const buffer = fs.readFileSync(sarifFilePath, 'utf-8');
         this.sarifLog = JSON.parse(buffer);
     }
-    queryLogFile(jmesPathQuery) {
-        return __awaiter(this, void 0, void 0, function* () {
-            // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-            const jmespath = __nccwpck_require__(783);
-            core.debug(`Running query ${jmesPathQuery} ...`);
-            const result = jmespath.search(this.sarifLog, jmesPathQuery);
-            if (result === null || result === undefined) {
-                core.debug(`Result of query is ${result} ...`);
-                return false;
-            }
-            return result.length > 0;
-        });
+    getMaxProblemSeverity() {
+        const securitySevarity = this.getMaxSecuritySeverityScore();
+        if (securitySevarity >= 9.0) {
+            return 'critical';
+        }
+        else if (securitySevarity >= 7.0) {
+            return 'high';
+        }
+        else if (securitySevarity >= 4.0) {
+            return 'medium';
+        }
+        return 'low';
     }
-    hasResults() {
-        return __awaiter(this, void 0, void 0, function* () {
-            let hasResults = false;
-            for (const run of this.sarifLog.runs) {
-                if (run.results !== undefined && run.results.length > 0) {
-                    hasResults = true;
-                    break;
-                }
+    getMaxSecuritySeverityScore() {
+        var _a, _b, _c, _d, _e;
+        let securitySevarity = 0;
+        for (const run of this.sarifLog.runs) {
+            if (run.results === null || run.results === undefined)
+                continue;
+            for (const result of run.results) {
+                const ruleIndex = (_b = (_a = result.rule) === null || _a === void 0 ? void 0 : _a.index) !== null && _b !== void 0 ? _b : -1;
+                const toolComponentIndex = (_e = (_d = (_c = result.rule) === null || _c === void 0 ? void 0 : _c.toolComponent) === null || _d === void 0 ? void 0 : _d.index) !== null && _e !== void 0 ? _e : -1;
+                if (run.tool.extensions === undefined)
+                    continue;
+                const toolComponent = run.tool.extensions[toolComponentIndex];
+                if (toolComponent.rules === undefined)
+                    continue;
+                if (toolComponent.rules[ruleIndex].properties === undefined)
+                    continue;
+                const reportingDescriptor = toolComponent.rules[ruleIndex];
+                if (reportingDescriptor.properties === undefined)
+                    continue;
+                if (reportingDescriptor.properties['security-severity'] > securitySevarity)
+                    securitySevarity = +reportingDescriptor.properties['security-severity'];
             }
-            return hasResults;
-        });
+        }
+        return securitySevarity;
     }
     hasErrorAlerts() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.hasAlert('error');
-        });
+        return this.hasAlert('error');
     }
     hasWarningAlerts() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.hasAlert('warning');
-        });
+        return this.hasAlert('warning');
     }
     hasNoteAlerts() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.hasAlert('note');
-        });
+        return this.hasAlert('note');
     }
     hasAlert(level) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let hasAlert = false;
-            core.debug(`Alert level: ${level} ...`);
-            for (const run of this.sarifLog.runs) {
-                if (run.results === null || run.results === undefined) {
-                    core.debug(`Results are ${run.results}`);
+        var _a, _b, _c, _d, _e, _f;
+        let hasAlert = false;
+        core.debug(`Alert level: ${level} ...`);
+        for (const run of this.sarifLog.runs) {
+            if (run.results === null || run.results === undefined)
+                continue;
+            for (const result of run.results) {
+                const ruleIndex = (_b = (_a = result.rule) === null || _a === void 0 ? void 0 : _a.index) !== null && _b !== void 0 ? _b : -1;
+                const toolComponentIndex = (_e = (_d = (_c = result.rule) === null || _c === void 0 ? void 0 : _c.toolComponent) === null || _d === void 0 ? void 0 : _d.index) !== null && _e !== void 0 ? _e : -1;
+                if (run.tool.extensions === undefined)
                     continue;
-                }
-                if (run.tool.extensions === null || run.tool.extensions === undefined) {
-                    core.debug(`Tool Extensions are ${run.tool.extensions}`);
+                const toolComponent = run.tool.extensions[toolComponentIndex];
+                if (toolComponent.rules === undefined)
                     continue;
-                }
-                for (const result of run.results) {
-                    if (result.rule === null || result.rule === undefined) {
-                        core.debug(`Result Rule is ${result.rule}`);
-                        continue;
-                    }
-                    if (result.rule.index === null || result.rule.index === undefined) {
-                        core.debug(`Result Rule Index is ${result.rule.index}`);
-                        continue;
-                    }
-                    if (result.rule.toolComponent === null ||
-                        result.rule.toolComponent === undefined) {
-                        core.debug(`Result Rule Tool Component is ${result.rule.toolComponent}`);
-                        continue;
-                    }
-                    if (result.rule.toolComponent.index === null ||
-                        result.rule.toolComponent.index === undefined) {
-                        core.debug(`Result Rule Tool Component Index is ${result.rule.toolComponent.index}`);
-                        continue;
-                    }
-                    core.debug(`Result Rule Tool Component Index: ${result.rule.toolComponent.index}`);
-                    const toolComponent = run.tool.extensions[result.rule.toolComponent.index];
-                    if (toolComponent === null || toolComponent === undefined) {
-                        core.debug(`Tool Component is ${toolComponent}`);
-                        continue;
-                    }
-                    if (toolComponent.rules === null || toolComponent.rules === undefined) {
-                        core.debug(`Tool Component Rules are ${toolComponent.rules}`);
-                        continue;
-                    }
-                    core.debug(`Result Rule Index: ${result.rule.index}`);
-                    const reportingDescriptor = toolComponent.rules[result.rule.index];
-                    if (reportingDescriptor.defaultConfiguration === null ||
-                        reportingDescriptor.defaultConfiguration === undefined) {
-                        core.debug(`Reporting Descriptor Default Configuration are ${reportingDescriptor.defaultConfiguration}`);
-                        continue;
-                    }
-                    core.debug(`Reporting Descriptor Default Configuration Level: ${reportingDescriptor.defaultConfiguration.level}`);
-                    if (reportingDescriptor.defaultConfiguration.level === level) {
-                        hasAlert = true;
-                        break;
-                    }
-                }
-                if (hasAlert)
+                if (toolComponent.rules[ruleIndex].properties === undefined)
+                    continue;
+                const reportingDescriptor = toolComponent.rules[ruleIndex];
+                if (((_f = reportingDescriptor.defaultConfiguration) === null || _f === void 0 ? void 0 : _f.level) === level) {
+                    hasAlert = true;
                     break;
+                }
             }
-            return hasAlert;
-        });
+            if (hasAlert)
+                break;
+        }
+        return hasAlert;
+    }
+    queryLogFile(jmesPathQuery) {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+        const jmespath = __nccwpck_require__(783);
+        core.debug(`Running query ${jmesPathQuery} ...`);
+        const result = jmespath.search(this.sarifLog, jmesPathQuery);
+        if (result === null || result === undefined) {
+            core.debug(`Result of query is ${result} ...`);
+            return false;
+        }
+        return result.length > 0;
+    }
+    hasResults() {
+        let hasResults = false;
+        for (const run of this.sarifLog.runs) {
+            if (run.results !== undefined && run.results.length > 0) {
+                hasResults = true;
+                break;
+            }
+        }
+        return hasResults;
     }
 }
 exports.SarifParser = SarifParser;
