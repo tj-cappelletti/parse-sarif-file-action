@@ -18,8 +18,11 @@ inputs:
     default: 'false'
     description: 'Fail workflow if notes are in the SARIF file'
     required: false
+  maxProblemSeverity:
+    description: 'The environment variable to report the max problem severity'
+    required: false
   maxSecurityScoreOutputVariable:
-    description: 'The environment variable to report the status too'
+    description: 'The environment variable to report the security score'
     required: false
   jmesPathQuery:
     description: 'The query to locate the desired information in the SARIF file, if set, will fail worflow if results are returned.'

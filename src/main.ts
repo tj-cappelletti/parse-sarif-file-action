@@ -8,6 +8,7 @@ async function run(): Promise<void> {
     const failOnWarningsString: string = core.getInput('failOnWarnings');
     const failOnNotesString: string = core.getInput('failOnNotes');
     const jmesPathQuery: string = core.getInput('jmesPathQuery');
+    const maxProblemSeverity: string = core.getInput('maxProblemSeverity');
     const maxSecurityScoreOutputVariable: string = core.getInput('maxSecurityScoreOutputVariable');
     const sarifFilePath: string = core.getInput('sarifFile');
     const statusOutputVariable: string = core.getInput('statusOutputVariable');
@@ -79,11 +80,15 @@ async function run(): Promise<void> {
       successful = false;
     }
 
-    if (statusOutputVariable !== undefined) {
+    if (statusOutputVariable !== '') {
       core.setOutput(statusOutputVariable, successful);
     }
 
-    if (maxSecurityScoreOutputVariable !== undefined) {
+    if (maxProblemSeverity !== '') {
+      core.setOutput(maxProblemSeverity, sarifParser.getMaxProblemSeverity());
+    }
+
+    if (maxSecurityScoreOutputVariable !== '') {
       core.setOutput(maxSecurityScoreOutputVariable, sarifParser.getMaxSecuritySeverityScore());
     }
 

@@ -49,6 +49,7 @@ function run() {
             const failOnWarningsString = core.getInput('failOnWarnings');
             const failOnNotesString = core.getInput('failOnNotes');
             const jmesPathQuery = core.getInput('jmesPathQuery');
+            const maxProblemSeverity = core.getInput('maxProblemSeverity');
             const maxSecurityScoreOutputVariable = core.getInput('maxSecurityScoreOutputVariable');
             const sarifFilePath = core.getInput('sarifFile');
             const statusOutputVariable = core.getInput('statusOutputVariable');
@@ -106,10 +107,13 @@ function run() {
                 messages.push('The JMESPath query found results');
                 successful = false;
             }
-            if (statusOutputVariable !== undefined) {
+            if (statusOutputVariable !== '') {
                 core.setOutput(statusOutputVariable, successful);
             }
-            if (maxSecurityScoreOutputVariable !== undefined) {
+            if (maxProblemSeverity !== '') {
+                core.setOutput(maxProblemSeverity, sarifParser.getMaxProblemSeverity());
+            }
+            if (maxSecurityScoreOutputVariable !== '') {
                 core.setOutput(maxSecurityScoreOutputVariable, sarifParser.getMaxSecuritySeverityScore());
             }
             if (!successful) {
